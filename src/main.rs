@@ -9,21 +9,31 @@ fn predict(w: &mut f32, inputs: &[f32; 4]) -> [f32; 4]{
 fn main() {
     let mut w: f32 = 0.1;
     let learning_rate: f32 = 0.1;
+    let epochs: u16 = 10;
 
     let inputs: [f32; 4] = [1.0,2.0,3.0,4.0];
     let targets: [f32; 4] = [2.0,4.0,6.0,8.0];
 
-    for _ in 1..=25{
+    for _ in 0..epochs {
         let pred = predict(&mut w, &inputs);
         
         let mut errors: [f32; 4] = [0.0; 4];
         for (i, (t, p)) in targets.iter().zip(pred.iter()).enumerate() {
-            errors[i] = t - p;
+            errors[i] = (t - p).powf(2.0);
         }
 
         let mut cost: f32 = errors.iter().sum::<f32>() / targets.len() as f32;
         println!("Weight: {:.4}, Cost: {:.4}", w, cost);
-        w += learning_rate * cost;
+
+        let mut errors_d: [f32; 4] = [0.0; 4];
+        for (i, (p, t)) in pred.iter().zip(targets.iter()).enumerate() {
+            errors_d[i] = 2.0 * (p - t);
+        }
+        let mut weight_d: [f32; 4] = [0.0; 4];
+        for (j, (e, i)) in errors_d.iter().zip(inputs.iter()).enumerate() {
+            weight_d[j] = e * i;
+        }
+        w -= learning_rate * weight_d.iter().sum::<f32>() / weight_d.len() as f32;
     }
 
     let test_inputs = [5.0, 6.0, 7.0, 8.0];
